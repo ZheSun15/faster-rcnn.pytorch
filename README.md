@@ -1,5 +1,5 @@
 # read this before training
-zhe @ 2020.03.02
+zhe @ 2020.03.02  with LTU
 
 1. download all the code from my github and follow the insruction of jwyang below to setup the environment and download pretrained models(vgg16 or/and resnet101) to ./data/pretrained_model.
 
@@ -15,7 +15,9 @@ zhe @ 2020.03.02
 
 
 
+I've add an sample of how to train, test or run a demo from terminal. Find the demo code in bash_code.sh
 
+Below is the original readme. Enjoy!
 
 
 # A *Faster* Pytorch Implementation of Faster R-CNN
