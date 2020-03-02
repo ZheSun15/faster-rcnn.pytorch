@@ -1,3 +1,23 @@
+# read this before training
+zhe @ 2020.03.02
+
+1. download all the code from my github and follow the insruction of jwyang below to setup the environment and download pretrained models(vgg16 or/and resnet101) to ./data/pretrained_model.
+
+2. modify line 48 in ./lib/datasets/pascal_voc.py, paste your own class names.
+
+3. save your own dataset as VOC format, prepare trainval.txt, and delete everything in ./data/cache
+
+4. follow steps of jwyang below to train. find trained models at ./models
+
+5. to test, after finishing step 1-4, simply follow jwyang's instructions below.
+
+6. to run a demo, you need to modify line 169 (should be) in ./demo.py, changing the class names into yours.
+
+
+
+
+
+
 # A *Faster* Pytorch Implementation of Faster R-CNN
 
 ## Introduction
