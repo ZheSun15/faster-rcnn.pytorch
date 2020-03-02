@@ -16,7 +16,6 @@ import pprint
 import pdb
 import time
 import cv2
-import imutils
 import torch
 from torch.autograd import Variable
 import torch.nn as nn
@@ -29,7 +28,8 @@ from roi_data_layer.roidb import combined_roidb
 from roi_data_layer.roibatchLoader import roibatchLoader
 from model.utils.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
 from model.rpn.bbox_transform import clip_boxes
-from model.nms.nms_wrapper import nms
+# from model.nms.nms_wrapper import nms
+from model.roi_layers import nms
 from model.rpn.bbox_transform import bbox_transform_inv
 from model.utils.net_utils import save_net, load_net, vis_detections
 from model.utils.blob import im_list_to_blob
@@ -165,12 +165,17 @@ if __name__ == '__main__':
   load_name = os.path.join(input_dir,
     'faster_rcnn_{}_{}_{}.pth'.format(args.checksession, args.checkepoch, args.checkpoint))
 
+  '''
   pascal_classes = np.asarray(['__background__',
                        'aeroplane', 'bicycle', 'bird', 'boat',
                        'bottle', 'bus', 'car', 'cat', 'chair',
                        'cow', 'diningtable', 'dog', 'horse',
                        'motorbike', 'person', 'pottedplant',
                        'sheep', 'sofa', 'train', 'tvmonitor'])
+  '''
+  pascal_classes = np.asarray(['__background__',  # always index 0
+                        'gallbladder','heart','leftkidney','rightkidney','liver','lungs','leftlung','rightlung',
+                        'pancreas','spleen','venoussystem','portalvein','aorta','artery','tumor'])
 
   # initilize the network here.
   if args.net == 'vgg16':
@@ -217,11 +222,10 @@ if __name__ == '__main__':
     gt_boxes = gt_boxes.cuda()
 
   # make variable
-  with torch.no_grad():
-    im_data = Variable(im_data)
-    im_info = Variable(im_info)
-    num_boxes = Variable(num_boxes)
-    gt_boxes = Variable(gt_boxes)
+  im_data = Variable(im_data, volatile=True)
+  im_info = Variable(im_info, volatile=True)
+  num_boxes = Variable(num_boxes, volatile=True)
+  gt_boxes = Variable(gt_boxes, volatile=True)
 
   if args.cuda > 0:
     cfg.CUDA = True
@@ -264,12 +268,11 @@ if __name__ == '__main__':
         im_file = os.path.join(args.image_dir, imglist[num_images])
         # im = cv2.imread(im_file)
         im_in = np.array(imread(im_file))
-        if len(im_in.shape) == 2:
-          im_in = im_in[:,:,np.newaxis]
-          im_in = np.concatenate((im_in,im_in,im_in), axis=2)
-        # rgb -> bgr
-        im_in = im_in[:,:,::-1]
-      im = im_in
+      if len(im_in.shape) == 2:
+        im_in = im_in[:,:,np.newaxis]
+        im_in = np.concatenate((im_in,im_in,im_in), axis=2)
+      # rgb -> bgr
+      im = im_in[:,:,::-1]
 
       blobs, im_scales = _get_image_blob(im)
       assert len(im_scales) == 1, "Only single-image batch implemented"
@@ -280,10 +283,11 @@ if __name__ == '__main__':
       im_data_pt = im_data_pt.permute(0, 3, 1, 2)
       im_info_pt = torch.from_numpy(im_info_np)
 
-      im_data.data.resize_(im_data_pt.size()).copy_(im_data_pt)
-      im_info.data.resize_(im_info_pt.size()).copy_(im_info_pt)
-      gt_boxes.data.resize_(1, 1, 5).zero_()
-      num_boxes.data.resize_(1).zero_()
+      with torch.no_grad():
+              im_data.resize_(im_data_pt.size()).copy_(im_data_pt)
+              im_info.resize_(im_info_pt.size()).copy_(im_info_pt)
+              gt_boxes.resize_(1, 1, 5).zero_()
+              num_boxes.resize_(1).zero_()
 
       # pdb.set_trace()
       det_tic = time.time()
@@ -323,8 +327,7 @@ if __name__ == '__main__':
           pred_boxes = clip_boxes(pred_boxes, im_info.data, 1)
       else:
           # Simply repeat the boxes, once for each class
-          _ = torch.from_numpy(np.tile(boxes, (1, scores.shape[1])))
-          pred_boxes = _.cuda() if args.cuda > 0 else _
+          pred_boxes = np.tile(boxes, (1, scores.shape[1]))
 
       pred_boxes /= im_scales[0]
 
@@ -349,7 +352,8 @@ if __name__ == '__main__':
             cls_dets = torch.cat((cls_boxes, cls_scores.unsqueeze(1)), 1)
             # cls_dets = torch.cat((cls_boxes, cls_scores), 1)
             cls_dets = cls_dets[order]
-            keep = nms(cls_dets, cfg.TEST.NMS, force_cpu=not cfg.USE_GPU_NMS)
+            # keep = nms(cls_dets, cfg.TEST.NMS, force_cpu=not cfg.USE_GPU_NMS)
+            keep = nms(cls_boxes[order, :], cls_scores[order], cfg.TEST.NMS)
             cls_dets = cls_dets[keep.view(-1).long()]
             if vis:
               im2show = vis_detections(im2show, pascal_classes[j], cls_dets.cpu().numpy(), 0.5)
@@ -365,10 +369,13 @@ if __name__ == '__main__':
       if vis and webcam_num == -1:
           # cv2.imshow('test', im2show)
           # cv2.waitKey(0)
-          result_path = os.path.join(args.image_dir, imglist[num_images][:-4] + "_det.jpg")
+          if not os.path.exists(os.path.join(args.image_dir, 'demo_result')):
+            os.mkdir(os.path.join(args.image_dir, 'demo_result'))
+          result_path = os.path.join(args.image_dir, 'demo_result', imglist[num_images][:-4] + "_det.jpg")
           cv2.imwrite(result_path, im2show)
       else:
-          cv2.imshow("frame", im2show)
+          im2showRGB = cv2.cvtColor(im2show, cv2.COLOR_BGR2RGB)
+          cv2.imshow("frame", im2showRGB)
           total_toc = time.time()
           total_time = total_toc - total_tic
           frame_rate = 1 / total_time
