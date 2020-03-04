@@ -6,7 +6,7 @@ zhe @ 2020.03.02  with LTU
 git checkout pytorch1.0
 ```
 
-1. download all the code from my github and follow the insruction of jwyang below to setup the environment and download pretrained models(vgg16 or/and resnet101) to ./data/pretrained_model. Install cocoapi, or comment every lines about coco dataset if you encountered any error.
+1. download all the code from my github and follow the insruction of [jwyang](https://github.com/jwyang/faster-rcnn.pytorch/tree/pytorch-1.0) below to setup the environment and download pretrained models(vgg16 or/and resnet101) to ./data/pretrained_model. Install cocoapi, or comment every lines about coco dataset if you encountered any error.
 
 2. modify line 48 in ./lib/datasets/pascal_voc.py, paste your own class names.
 
