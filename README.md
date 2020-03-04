@@ -1,7 +1,10 @@
 # read this before training
 zhe @ 2020.03.02  with LTU
 
-0. switch to branck pytorch-1.0
+0. switch to branck pytorch-1.0 using
+```
+git checkout pytorch1.0
+```
 
 1. download all the code from my github and follow the insruction of jwyang below to setup the environment and download pretrained models(vgg16 or/and resnet101) to ./data/pretrained_model. Install cocoapi, or comment every lines about coco dataset if you encountered any error.
 
