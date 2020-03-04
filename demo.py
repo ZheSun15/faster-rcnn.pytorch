@@ -165,12 +165,17 @@ if __name__ == '__main__':
   load_name = os.path.join(input_dir,
     'faster_rcnn_{}_{}_{}.pth'.format(args.checksession, args.checkepoch, args.checkpoint))
 
+  '''
   pascal_classes = np.asarray(['__background__',
                        'aeroplane', 'bicycle', 'bird', 'boat',
                        'bottle', 'bus', 'car', 'cat', 'chair',
                        'cow', 'diningtable', 'dog', 'horse',
                        'motorbike', 'person', 'pottedplant',
                        'sheep', 'sofa', 'train', 'tvmonitor'])
+  '''
+  pascal_classes = np.asarray(['__background__',  # always index 0
+                        'gallbladder','heart','leftkidney','rightkidney','liver','lungs','leftlung','rightlung',
+                        'pancreas','spleen','venoussystem','portalvein','aorta','artery','tumor'])
 
   # initilize the network here.
   if args.net == 'vgg16':
@@ -364,7 +369,9 @@ if __name__ == '__main__':
       if vis and webcam_num == -1:
           # cv2.imshow('test', im2show)
           # cv2.waitKey(0)
-          result_path = os.path.join(args.image_dir, imglist[num_images][:-4] + "_det.jpg")
+          if not os.path.exists(os.path.join(args.image_dir, 'demo_result')):
+            os.mkdir(os.path.join(args.image_dir, 'demo_result'))
+          result_path = os.path.join(args.image_dir, 'demo_result', imglist[num_images][:-4] + "_det.jpg")
           cv2.imwrite(result_path, im2show)
       else:
           im2showRGB = cv2.cvtColor(im2show, cv2.COLOR_BGR2RGB)
