@@ -7,7 +7,7 @@ zhe @ 2020.03.02  with LTU
 
 2. modify line 48 in ./lib/datasets/pascal_voc.py, paste your own class names.
 
-3. save your own dataset as VOC format, prepare trainval.txt, and delete everything in ./data/cache
+3. save your own dataset as VOC format, prepare trainval.txt, and delete everything in ./data/cache. Create directories under ./data folder like ./data/VOCdevkit2007/VOC2007, and save the VOC-like dataset to ./data/VOCdevkit2007/VOC2007. After you are done, there should be three folders under /VOC2007: VOC2007/JPEGImage, VOC2007/Annotations and VOC2007/ImageSets.
 
 4. follow steps of jwyang below to train. find trained models at ./models
 
